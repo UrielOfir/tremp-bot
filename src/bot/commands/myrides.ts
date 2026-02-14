@@ -15,17 +15,19 @@ export function myridesCommand(ctx: Context): void {
     return;
   }
 
-  const lines = rides.map((ride) => {
-    const origin = getStop(ride.origin)!;
-    const dest = getStop(ride.destination)!;
-    return t("my_rides_item", locale, {
-      id: ride.id,
-      role: t(ride.role, locale),
-      origin: origin.name[locale],
-      destination: dest.name[locale],
-      time: formatTime(ride.departure_time),
+  const lines = rides
+    .filter((ride) => getStop(ride.origin) && getStop(ride.destination))
+    .map((ride) => {
+      const origin = getStop(ride.origin)!;
+      const dest = getStop(ride.destination)!;
+      return t("my_rides_item", locale, {
+        id: ride.id,
+        role: t(ride.role, locale),
+        origin: origin.name[locale],
+        destination: dest.name[locale],
+        time: formatTime(ride.departure_time),
+      });
     });
-  });
 
   ctx.reply(
     `${t("my_rides_header", locale)}\n\n${lines.join("\n\n")}\n\n${t("cancel_prompt", locale)}`

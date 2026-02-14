@@ -52,7 +52,8 @@ export function handleStopSelection(ctx: Context & { match: RegExpExecArray }): 
     session.step = "destination";
 
     // Show destination stops (exclude origin and same hub group)
-    const originStop = getStop(stopId)!;
+    const originStop = getStop(stopId);
+    if (!originStop) return;
     const buttons = activeRoute.stops
       .filter((s) => !isSameHubGroup(s, originStop))
       .map((stop) => Markup.button.callback(stop.name[locale], `stop:${stop.id}`));
@@ -144,8 +145,9 @@ function createAndMatchRide(ctx: Context, session: FlowState, departureTime: str
 
   clearSession(telegramId);
 
-  const originStop = getStop(ride.origin)!;
-  const destStop = getStop(ride.destination)!;
+  const originStop = getStop(ride.origin);
+  const destStop = getStop(ride.destination);
+  if (!originStop || !destStop) return;
 
   const summary = t("ride_summary", locale, {
     origin: originStop.name[locale],
@@ -164,8 +166,9 @@ function createAndMatchRide(ctx: Context, session: FlowState, departureTime: str
     } else {
       ctx.reply(t("matches_found", locale, { count: matches.length }));
       for (const match of matches) {
-        const mOrigin = getStop(match.ride.origin)!;
-        const mDest = getStop(match.ride.destination)!;
+        const mOrigin = getStop(match.ride.origin);
+        const mDest = getStop(match.ride.destination);
+        if (!mOrigin || !mDest) continue;
         // Try to get driver's username via Telegram API
         const key = match.ride.telegram_id;
         ctx.telegram.getChat(Number(key)).then((chat) => {
