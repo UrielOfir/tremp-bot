@@ -4,7 +4,6 @@ import { Ride, Role } from "../models/types";
 export interface InsertRide {
   telegram_id: string;
   route_id: string;
-  direction: string;
   origin: string;
   destination: string;
   departure_time: string;
@@ -15,8 +14,8 @@ export interface InsertRide {
 export function insertRide(ride: InsertRide): Ride {
   const db = getDb();
   const stmt = db.prepare(`
-    INSERT INTO rides (telegram_id, route_id, direction, origin, destination, departure_time, available_seats, role)
-    VALUES (@telegram_id, @route_id, @direction, @origin, @destination, @departure_time, @available_seats, @role)
+    INSERT INTO rides (telegram_id, route_id, origin, destination, departure_time, available_seats, role)
+    VALUES (@telegram_id, @route_id, @origin, @destination, @departure_time, @available_seats, @role)
   `);
   const result = stmt.run(ride);
   return getRideById(result.lastInsertRowid as number)!;

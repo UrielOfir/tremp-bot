@@ -9,18 +9,13 @@ export interface Stop {
   id: string;
   name: LocalizedString;
   order: number;
-}
-
-export interface Direction {
-  id: string;
-  name: LocalizedString;
+  hub?: string; // ID of main-axis stop this branches from
 }
 
 export interface RouteConfig {
   id: string;
   name: LocalizedString;
   stops: Stop[];
-  directions: [Direction, Direction]; // exactly two: ascending and descending
 }
 
 export type Role = "driver" | "passenger";
@@ -29,7 +24,6 @@ export interface Ride {
   id: number;
   telegram_id: string;
   route_id: string;
-  direction: string;
   origin: string;
   destination: string;
   departure_time: string; // ISO 8601

@@ -1,11 +1,10 @@
 import { Context, Markup } from "telegraf";
-import { activeRoute, deriveDirection } from "../../config";
+import { activeRoute, getStop, isSameHubGroup, isAscending, resolveToHub } from "../../config";
 import { insertRide, getUserLocale } from "../../db/rides";
 import { t } from "../../i18n";
 import { Locale, Role } from "../../models/types";
 import { parseUserTime, formatTime, toISO } from "../../utils/time";
 import { findMatches } from "../../matching/matcher";
-import { getStop } from "../../config";
 
 interface FlowState {
   role: Role;
@@ -52,9 +51,10 @@ export function handleStopSelection(ctx: Context & { match: RegExpExecArray }): 
     session.origin = stopId;
     session.step = "destination";
 
-    // Show destination stops (exclude origin)
+    // Show destination stops (exclude origin and same hub group)
+    const originStop = getStop(stopId)!;
     const buttons = activeRoute.stops
-      .filter((s) => s.id !== stopId)
+      .filter((s) => !isSameHubGroup(s, originStop))
       .map((stop) => Markup.button.callback(stop.name[locale], `stop:${stop.id}`));
 
     ctx.editMessageText(t("pick_destination", locale), Markup.inlineKeyboard(buttons, { columns: 2 }));
@@ -127,8 +127,7 @@ function createAndMatchRide(ctx: Context, session: FlowState, departureTime: str
   const telegramId = String(ctx.from!.id);
   const locale = getUserLocale(telegramId) as Locale;
 
-  const direction = deriveDirection(session.origin!, session.destination!);
-  if (!direction) {
+  if (isAscending(session.origin!, session.destination!) === null) {
     clearSession(telegramId);
     return;
   }
@@ -136,7 +135,6 @@ function createAndMatchRide(ctx: Context, session: FlowState, departureTime: str
   const ride = insertRide({
     telegram_id: telegramId,
     route_id: activeRoute.id,
-    direction,
     origin: session.origin!,
     destination: session.destination!,
     departure_time: departureTime,
@@ -208,11 +206,11 @@ function createAndMatchRide(ctx: Context, session: FlowState, departureTime: str
   }
 }
 
-/** Find passengers that match a new driver's ride */
+/** Find passengers that match a new driver's ride (branch-aware) */
 function findMatchesForDriver(driverRide: import("../../models/types").Ride) {
   const { getActiveRidesByRole } = require("../../db/rides");
   const dayjs = require("dayjs");
-  const { matchWindowMinutes, getStop: gs } = require("../../config");
+  const { matchWindowMinutes, getStop: gs, resolveToHub: rth, isAscending: isAsc } = require("../../config");
 
   const passengers = getActiveRidesByRole("passenger", driverRide.route_id) as import("../../models/types").Ride[];
   const driverOrigin = gs(driverRide.origin);
@@ -220,23 +218,48 @@ function findMatchesForDriver(driverRide: import("../../models/types").Ride) {
   if (!driverOrigin || !driverDest) return [];
 
   const driverTime = dayjs(driverRide.departure_time);
-  const isAscending = driverRide.direction === activeRoute.directions[0].id;
+  const driverAsc = isAsc(driverRide.origin, driverRide.destination);
+  if (driverAsc === null) return [];
+
+  // Resolve driver stops to hubs for segment overlap
+  const effectiveDriverOrigin = rth(driverOrigin);
+  const effectiveDriverDest = rth(driverDest);
 
   const results: import("../../models/types").MatchResult[] = [];
 
   for (const passenger of passengers) {
-    if (passenger.direction !== driverRide.direction) continue;
+    // Same traversal direction
+    const pAsc = isAsc(passenger.origin, passenger.destination);
+    if (pAsc !== driverAsc) continue;
 
     const pOrigin = gs(passenger.origin);
     const pDest = gs(passenger.destination);
     if (!pOrigin || !pDest) continue;
 
-    if (isAscending) {
-      if (driverOrigin.order > pOrigin.order) continue;
-      if (driverDest.order < pDest.order) continue;
+    // Phase 1: Segment overlap on main axis (hub-resolved)
+    const effectivePOrigin = rth(pOrigin);
+    const effectivePDest = rth(pDest);
+
+    if (driverAsc) {
+      if (effectiveDriverOrigin.order > effectivePOrigin.order) continue;
+      if (effectiveDriverDest.order < effectivePDest.order) continue;
     } else {
-      if (driverOrigin.order < pOrigin.order) continue;
-      if (driverDest.order > pDest.order) continue;
+      if (effectiveDriverOrigin.order < effectivePOrigin.order) continue;
+      if (effectiveDriverDest.order > effectivePDest.order) continue;
+    }
+
+    // Phase 2: Strict branch compatibility
+    // Passenger at a branch → driver must be at same branch
+    // Passenger at a hub → driver can be at hub or any branch of it
+    if (pOrigin.hub) {
+      if (pOrigin.id !== driverOrigin.id) continue;
+    } else {
+      if (driverOrigin.id !== pOrigin.id && driverOrigin.hub !== pOrigin.id) continue;
+    }
+    if (pDest.hub) {
+      if (pDest.id !== driverDest.id) continue;
+    } else {
+      if (driverDest.id !== pDest.id && driverDest.hub !== pDest.id) continue;
     }
 
     const pTime = dayjs(passenger.departure_time);

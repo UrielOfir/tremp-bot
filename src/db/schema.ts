@@ -8,7 +8,6 @@ export function initSchema(): void {
       id              INTEGER PRIMARY KEY AUTOINCREMENT,
       telegram_id     TEXT NOT NULL,
       route_id        TEXT NOT NULL,
-      direction       TEXT NOT NULL,
       origin          TEXT NOT NULL,
       destination     TEXT NOT NULL,
       departure_time  TEXT NOT NULL,
