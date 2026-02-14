@@ -22,4 +22,6 @@ export const he: Record<string, string> = {
   driver: "נהג",
   passenger: "נוסע",
   help: "פקודות זמינות:\n/drive — הצעת נסיעה\n/ride — בקשת טרמפ\n/myrides — הנסיעות שלי\n/cancel <id> — ביטול נסיעה\n/lang — שינוי שפה",
+  fallback: "לא הבנתי. הנה מה שאני יכול לעשות:\n/drive — הצעת נסיעה\n/ride — בקשת טרמפ\n/myrides — הנסיעות שלי\n/lang — שינוי שפה",
+  use_buttons: "השתמשו בכפתורים למעלה כדי לבחור תחנה.",
 };

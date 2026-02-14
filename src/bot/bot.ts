@@ -9,6 +9,9 @@ import {
   handleSeatsInput,
   getSession,
 } from "./conversations/rideFlow";
+import { getUserLocale } from "../db/rides";
+import { t } from "../i18n";
+import { Locale } from "../models/types";
 
 export function createBot(token: string): Telegraf {
   const bot = new Telegraf(token);
@@ -21,9 +24,7 @@ export function createBot(token: string): Telegraf {
   bot.command("cancel", (ctx) => cancelCommand(ctx));
   bot.command("lang", (ctx) => startCommand(ctx)); // reuse start for language picker
   bot.command("help", (ctx) => {
-    const { getUserLocale } = require("../db/rides");
-    const { t } = require("../i18n");
-    const locale = getUserLocale(String(ctx.from!.id));
+    const locale = getUserLocale(String(ctx.from!.id)) as Locale;
     ctx.reply(t("help", locale));
   });
 
@@ -31,11 +32,21 @@ export function createBot(token: string): Telegraf {
   bot.action(/^lang:(.+)$/, (ctx) => handleLangSelection(ctx));
   bot.action(/^stop:(.+)$/, (ctx) => handleStopSelection(ctx));
 
-  // Text messages — route to active conversation flow
+  // Text messages — route to active conversation flow or fallback
   bot.on("text", (ctx) => {
     const telegramId = String(ctx.from.id);
+    const locale = getUserLocale(telegramId) as Locale;
     const session = getSession(telegramId);
-    if (!session) return;
+
+    if (!session) {
+      ctx.reply(t("fallback", locale));
+      return;
+    }
+
+    if (session.step === "origin" || session.step === "destination") {
+      ctx.reply(t("use_buttons", locale));
+      return;
+    }
 
     if (session.step === "time") {
       handleTimeInput(ctx);

@@ -22,4 +22,6 @@ export const en: Record<string, string> = {
   driver: "driver",
   passenger: "passenger",
   help: "Available commands:\n/drive — Offer a ride\n/ride — Request a ride\n/myrides — My rides\n/cancel <id> — Cancel a ride\n/lang — Change language",
+  fallback: "I didn't understand that. Here's what I can do:\n/drive — Offer a ride\n/ride — Request a ride\n/myrides — My rides\n/lang — Change language",
+  use_buttons: "Please use the buttons above to select a stop.",
 };
