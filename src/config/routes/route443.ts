@@ -6,7 +6,7 @@ export const route443: RouteConfig = {
   stops: [
     { id: "ginaton", name: { he: "צומת גינתון", en: "Ginaton Junction" }, order: 0 },
     { id: "ben_shemen", name: { he: "צומת בן שמן", en: "Ben Shemen Junction" }, order: 1 },
-    { id: "kfar_noatr", name: { he: "כפר הנוער בן שמן", en: "Ben Shemen Youth Village" }, order: 2 },
+    { id: "kfar_noar", name: { he: "כפר הנוער בן שמן", en: "Ben Shemen Youth Village" }, order: 2 },
     { id: "Gimzo_Junction", name: { he: "צומת גימזו", en: "Gimzo Junction" }, order: 3 },
     { id: "Mitspe_Modiin_Junction", name: { he: "צומת מצפה מודיעין", en: "Mitspe Modi'in Junction" }, order: 4 },
     { id: "Mitkan_Adam_Junction", name: { he: "צומת מתקן אדם", en: "Mitkan Adam Junction" }, order: 5 },
