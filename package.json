@@ -1,16 +1,20 @@
 {
   "name": "tremp-bot",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "A Telegram ride-sharing bot for Route 443 (Israel), connecting drivers and passengers along the route",
+  "main": "dist/index.js",
   "scripts": {
     "dev": "tsx src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": ["telegram", "bot", "ride-sharing", "israel", "route-443", "tremp"],
+  "author": "UrielOfir",
+  "license": "AGPL-3.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/UrielOfir/tremp-bot.git"
+  },
   "dependencies": {
     "better-sqlite3": "^12.6.2",
     "dayjs": "^1.11.19",
