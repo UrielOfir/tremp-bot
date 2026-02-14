@@ -27,7 +27,7 @@ src/
 │   └── conversations/        # Multi-step conversation flows (rideFlow)
 ├── config/
 │   ├── index.ts             # Active route config, match window, helpers
-│   └── routes/route443.ts   # Route 443 stops and directions
+│   └── routes/route443.ts   # Route 443 stops (main-axis + branches)
 ├── db/
 │   ├── connection.ts        # SQLite connection
 │   ├── schema.ts            # Table creation (rides, user_prefs)
@@ -43,9 +43,9 @@ src/
 
 ## Key Concepts
 
-- **Route-based**: The bot serves a single active route (currently Route 443) with ordered stops and two directions (eastbound/westbound).
+- **Route-based**: The bot serves a single active route (currently Route 443) with ordered stops. Stops on the main axis have sequential `order` values. Branch stops (off-ramps, terminal splits) reference a main-axis hub via `hub` field and share its `order`.
 - **Roles**: Users are either `driver` or `passenger`.
-- **Matching**: Drivers and passengers are matched by route, direction, compatible stops, and a configurable time window (default 15 min).
+- **Matching**: Two-phase process — (1) segment overlap on the main axis (hub-resolved orders), then (2) strict branch compatibility (passenger at a branch requires driver at the same branch). Rides must also be within a configurable time window (default 15 min).
 - **i18n**: Hebrew is the default locale. All user-facing strings go through `t(key, locale, params)`. Fallback chain: requested locale → Hebrew → raw key.
 - **Conversation flow**: Multi-step inputs (stop selection, time, seats) use an in-memory session map — not persisted across restarts.
 - **Database**: Two tables — `rides` (ride offers/requests) and `user_prefs` (locale preference).
@@ -57,6 +57,7 @@ src/
 ## Conventions
 
 - Hebrew is the primary language for user-facing content.
-- Stop IDs use snake_case (e.g., `ben_shemen`, `beit_horon_interchange`).
-- Direction is derived from stop order, not user-selected.
+- Stop IDs use snake_case (e.g., `beit_horon_interchange`, `Shilat_Junction`).
+- Traversal direction (ascending/descending) is derived from origin/destination stop orders via `isAscending()` — not stored.
+- Branch stops must set `hub` to a main-axis stop ID and share that stop's `order` value.
 - Route configs are separate files under `src/config/routes/`.
