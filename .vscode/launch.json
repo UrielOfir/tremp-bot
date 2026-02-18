@@ -2,23 +2,22 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Debug index.ts",
+      "name": "Debug Bot (src/index.ts)",
       "type": "node",
       "request": "launch",
-      "runtimeExecutable": "tsx",
-      "runtimeArgs": ["--inspect-brk", "src/index.ts"],
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["--import", "tsx"],
+      "program": "${workspaceFolder}/src/index.ts",
       "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}/.env",
       "console": "integratedTerminal",
       "skipFiles": ["<node_internals>/**"]
     },
     {
-      "name": "Debug (Compiled)",
-      "type": "node",
+      "name": "Debug via npm dev",
+      "type": "node-terminal",
       "request": "launch",
-      "program": "${workspaceFolder}/dist/index.js",
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal",
-      "skipFiles": ["<node_internals>/**"]
+      "command": "npm run dev"
     }
   ]
 }
